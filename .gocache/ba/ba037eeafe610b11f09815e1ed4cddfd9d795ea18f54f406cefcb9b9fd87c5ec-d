@@ -1,9 +1,0 @@
-# test log
-getenv TMPDIR
-open /var/folders/q2/_06dhgmx4z35_drb62y5vnk80000gn/T/TestLoadYAMLSubset1068942708/001/netcheck.yaml
-open /var/folders/q2/_06dhgmx4z35_drb62y5vnk80000gn/T/TestLoadYAMLSubset1068942708/001/netcheck.yaml
-open /var/folders/q2/_06dhgmx4z35_drb62y5vnk80000gn/T
-getenv TMPDIR
-open /var/folders/q2/_06dhgmx4z35_drb62y5vnk80000gn/T/TestLoadRejectLocalhostIperf2588667971/001/netcheck.yaml
-open /var/folders/q2/_06dhgmx4z35_drb62y5vnk80000gn/T/TestLoadRejectLocalhostIperf2588667971/001/netcheck.yaml
-open /var/folders/q2/_06dhgmx4z35_drb62y5vnk80000gn/T

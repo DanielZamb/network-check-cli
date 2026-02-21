@@ -1,3 +1,0 @@
-# test log
-getenv UPDATE_GOLDEN
-open ../../testdata/golden/events.jsonl

@@ -1,7 +1,0 @@
-# test log
-getenv TMPDIR
-open /var/folders/q2/_06dhgmx4z35_drb62y5vnk80000gn/T/TestLoadAndWriteTable3019945267/001/r.json
-open /var/folders/q2/_06dhgmx4z35_drb62y5vnk80000gn/T/TestLoadAndWriteTable3019945267/001/r.json
-open /var/folders/q2/_06dhgmx4z35_drb62y5vnk80000gn/T/TestLoadAndWriteTable3019945267/001/out.txt
-stat /var/folders/q2/_06dhgmx4z35_drb62y5vnk80000gn/T/TestLoadAndWriteTable3019945267/001/out.txt
-open /var/folders/q2/_06dhgmx4z35_drb62y5vnk80000gn/T

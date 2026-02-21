@@ -1,9 +1,0 @@
-./bandwidth.go
-./bufferbloat.go
-./checks.go
-./dns.go
-./http.go
-./local.go
-./parsers.go
-./path.go
-./reachability.go

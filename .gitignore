@@ -1,0 +1,6 @@
+.gocache/
+.gomodcache/
+bin/
+netcheck
+coverage*.out
+soak.jsonl

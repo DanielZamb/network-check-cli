@@ -1,5 +1,0 @@
-# test log
-getenv UPDATE_GOLDEN
-open ../../testdata/golden/table.txt
-getenv UPDATE_GOLDEN
-open ../../testdata/golden/report.json
