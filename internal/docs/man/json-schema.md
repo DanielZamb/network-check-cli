@@ -1,0 +1,22 @@
+# netcheck json schema
+
+Top-level fields:
+- `schema_version`
+- `timestamp`
+- `host`
+- `os`
+- `version`
+- `git_commit`
+- `run_id`
+- `labels`
+- `config`
+- `checks`
+- `summary`
+- `score`
+
+Event stream (soak JSONL):
+- `event_type`
+- `timestamp`
+- `run_id`
+- `sequence`
+- `payload`

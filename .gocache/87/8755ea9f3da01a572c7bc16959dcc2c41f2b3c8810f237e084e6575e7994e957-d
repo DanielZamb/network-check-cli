@@ -1,0 +1,3 @@
+covervars.go
+exitcode.cover.go
+./exitcode_test.go

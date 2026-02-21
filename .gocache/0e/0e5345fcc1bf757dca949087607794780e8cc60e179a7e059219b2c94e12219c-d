@@ -1,0 +1,105 @@
+//line /Users/zambamon/Personal/scripts/network/internal/eval/eval.go:1:1
+package eval
+
+import "netcheck/internal/model"
+
+type Thresholds struct {
+	Pass float64
+	Warn float64
+}
+
+func UpperIsBetter(value, passMin, warnMin float64) model.Status {goCover_9862a0ffc7c5__0[0] = 5 ; goCover_9862a0ffc7c5__0[1] = goCover_9862a0ffc7c5_P ; goCover_9862a0ffc7c5__0[2] = 0 ; goCover_9862a0ffc7c5__0[3] = 1;
+	if value >= passMin {goCover_9862a0ffc7c5__0[6] = 1;
+		return model.StatusPass
+	}
+	goCover_9862a0ffc7c5__0[4] = 1;if value >= warnMin {goCover_9862a0ffc7c5__0[7] = 1;
+		return model.StatusWarn
+	}
+	goCover_9862a0ffc7c5__0[5] = 1;return model.StatusFail
+}
+
+func LowerIsBetter(value, passMax, warnMax float64) model.Status {goCover_9862a0ffc7c5__1[0] = 5 ; goCover_9862a0ffc7c5__1[1] = goCover_9862a0ffc7c5_P ; goCover_9862a0ffc7c5__1[2] = 1 ; goCover_9862a0ffc7c5__1[3] = 1;
+	if value < passMax {goCover_9862a0ffc7c5__1[6] = 1;
+		return model.StatusPass
+	}
+	goCover_9862a0ffc7c5__1[4] = 1;if value <= warnMax {goCover_9862a0ffc7c5__1[7] = 1;
+		return model.StatusWarn
+	}
+	goCover_9862a0ffc7c5__1[5] = 1;return model.StatusFail
+}
+
+func Score(checks []model.CheckResult) int {goCover_9862a0ffc7c5__2[0] = 19 ; goCover_9862a0ffc7c5__2[1] = goCover_9862a0ffc7c5_P ; goCover_9862a0ffc7c5__2[2] = 2 ; goCover_9862a0ffc7c5__2[3] = 1;
+	if len(checks) == 0 {goCover_9862a0ffc7c5__2[10] = 1;
+		return 0
+	}
+	goCover_9862a0ffc7c5__2[4] = 1;weights := map[string]float64{
+		"reliability": 35,
+		"latency":     25,
+		"dns":         10,
+		"http":        10,
+		"throughput":  20,
+	}
+	catScores := map[string][]float64{}
+	for _, c := range checks {goCover_9862a0ffc7c5__2[11] = 1;
+		cat := categoryForGroup(c.Group)
+		if cat == "" {goCover_9862a0ffc7c5__2[13] = 1;
+			continue
+		}
+		goCover_9862a0ffc7c5__2[12] = 1;catScores[cat] = append(catScores[cat], statusToScore(c.Status))
+	}
+	goCover_9862a0ffc7c5__2[5] = 1;var weightedTotal float64
+	var totalWeight float64
+	for cat, scores := range catScores {goCover_9862a0ffc7c5__2[14] = 1;
+		w := weights[cat]
+		if w == 0 || len(scores) == 0 {goCover_9862a0ffc7c5__2[17] = 1;
+			continue
+		}
+		goCover_9862a0ffc7c5__2[15] = 1;var sum float64
+		for _, sc := range scores {goCover_9862a0ffc7c5__2[18] = 1;
+			sum += sc
+		}
+		goCover_9862a0ffc7c5__2[16] = 1;weightedTotal += (sum / float64(len(scores))) * w
+		totalWeight += w
+	}
+	goCover_9862a0ffc7c5__2[6] = 1;if totalWeight == 0 {goCover_9862a0ffc7c5__2[19] = 1;
+		return 0
+	}
+	goCover_9862a0ffc7c5__2[7] = 1;s := int((weightedTotal / totalWeight) * 100)
+	if s < 0 {goCover_9862a0ffc7c5__2[20] = 1;
+		return 0
+	}
+	goCover_9862a0ffc7c5__2[8] = 1;if s > 100 {goCover_9862a0ffc7c5__2[21] = 1;
+		return 100
+	}
+	goCover_9862a0ffc7c5__2[9] = 1;return s
+}
+
+func statusToScore(s model.Status) float64 {goCover_9862a0ffc7c5__3[0] = 5 ; goCover_9862a0ffc7c5__3[1] = goCover_9862a0ffc7c5_P ; goCover_9862a0ffc7c5__3[2] = 3 ; goCover_9862a0ffc7c5__3[3] = 1;
+	switch s {
+	case model.StatusPass:goCover_9862a0ffc7c5__3[4] = 1;
+		return 1
+	case model.StatusWarn:goCover_9862a0ffc7c5__3[5] = 1;
+		return 0.6
+	case model.StatusSkip:goCover_9862a0ffc7c5__3[6] = 1;
+		return 0.5
+	default:goCover_9862a0ffc7c5__3[7] = 1;
+		return 0
+	}
+}
+
+func categoryForGroup(group string) string {goCover_9862a0ffc7c5__4[0] = 7 ; goCover_9862a0ffc7c5__4[1] = goCover_9862a0ffc7c5_P ; goCover_9862a0ffc7c5__4[2] = 4 ; goCover_9862a0ffc7c5__4[3] = 1;
+	switch group {
+	case "local", "reachability", "path":goCover_9862a0ffc7c5__4[4] = 1;
+		return "reliability"
+	case "bufferbloat":goCover_9862a0ffc7c5__4[5] = 1;
+		return "latency"
+	case "dns":goCover_9862a0ffc7c5__4[6] = 1;
+		return "dns"
+	case "http":goCover_9862a0ffc7c5__4[7] = 1;
+		return "http"
+	case "bandwidth":goCover_9862a0ffc7c5__4[8] = 1;
+		return "throughput"
+	default:goCover_9862a0ffc7c5__4[9] = 1;
+		return ""
+	}
+}

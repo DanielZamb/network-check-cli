@@ -1,0 +1,73 @@
+//line /Users/zambamon/Personal/scripts/network/internal/docs/docs.go:1:1
+package docs
+
+import (
+	"embed"
+	"fmt"
+	"os"
+	"path/filepath"
+	"sort"
+	"strings"
+)
+
+//go:embed man/*.md
+var manFS embed.FS
+
+var topics = map[string]string{
+	"netcheck":    "man/netcheck.md",
+	"run":         "man/run.md",
+	"soak":        "man/soak.md",
+	"compare":     "man/compare.md",
+	"config":      "man/config.md",
+	"exit-codes":  "man/exit-codes.md",
+	"json-schema": "man/json-schema.md",
+}
+
+func Topics() []string {goCover_31677e5b9b54__0[0] = 3 ; goCover_31677e5b9b54__0[1] = goCover_31677e5b9b54_P ; goCover_31677e5b9b54__0[2] = 0 ; goCover_31677e5b9b54__0[3] = 1;
+	out := make([]string, 0, len(topics))
+	for k := range topics {goCover_31677e5b9b54__0[5] = 1;
+		out = append(out, k)
+	}
+	goCover_31677e5b9b54__0[4] = 1;sort.Strings(out)
+	return out
+}
+
+func Get(topic string) (string, error) {goCover_31677e5b9b54__1[0] = 7 ; goCover_31677e5b9b54__1[1] = goCover_31677e5b9b54_P ; goCover_31677e5b9b54__1[2] = 1 ; goCover_31677e5b9b54__1[3] = 1;
+	topic = strings.TrimSpace(topic)
+	if topic == "" {goCover_31677e5b9b54__1[7] = 1;
+		topic = "netcheck"
+	}
+	goCover_31677e5b9b54__1[4] = 1;path, ok := topics[topic]
+	if !ok {goCover_31677e5b9b54__1[8] = 1;
+		return "", fmt.Errorf("unknown man topic: %s", topic)
+	}
+	goCover_31677e5b9b54__1[5] = 1;b, err := manFS.ReadFile(path)
+	if err != nil {goCover_31677e5b9b54__1[9] = 1;
+		return "", err
+	}
+	goCover_31677e5b9b54__1[6] = 1;return string(b), nil
+}
+
+func Export(dir string) error {goCover_31677e5b9b54__2[0] = 10 ; goCover_31677e5b9b54__2[1] = goCover_31677e5b9b54_P ; goCover_31677e5b9b54__2[2] = 2 ; goCover_31677e5b9b54__2[3] = 1;
+	if err := os.MkdirAll(dir, 0o755); err != nil {goCover_31677e5b9b54__2[6] = 1;
+		return err
+	}
+	goCover_31677e5b9b54__2[4] = 1;for topic, path := range topics {goCover_31677e5b9b54__2[7] = 1;
+		b, err := manFS.ReadFile(path)
+		if err != nil {goCover_31677e5b9b54__2[10] = 1;
+			return err
+		}
+		goCover_31677e5b9b54__2[8] = 1;if err := os.WriteFile(filepath.Join(dir, "netcheck-"+topic+".md"), b, 0o644); err != nil {goCover_31677e5b9b54__2[11] = 1;
+			return err
+		}
+		goCover_31677e5b9b54__2[9] = 1;roff := markdownToRoff(topic, string(b))
+		if err := os.WriteFile(filepath.Join(dir, "netcheck-"+topic+".1"), []byte(roff), 0o644); err != nil {goCover_31677e5b9b54__2[12] = 1;
+			return err
+		}
+	}
+	goCover_31677e5b9b54__2[5] = 1;return nil
+}
+
+func markdownToRoff(topic, md string) string {goCover_31677e5b9b54__3[0] = 1 ; goCover_31677e5b9b54__3[1] = goCover_31677e5b9b54_P ; goCover_31677e5b9b54__3[2] = 3 ; goCover_31677e5b9b54__3[3] = 1;
+	return fmt.Sprintf(".TH NETCHECK-%s 1\n.SH NAME\nnetcheck-%s\n.SH DESCRIPTION\n%s\n", strings.ToUpper(topic), topic, strings.ReplaceAll(md, "\n", "\n.br\n"))
+}

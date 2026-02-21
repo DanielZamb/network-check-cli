@@ -1,0 +1,6 @@
+=== RUN   TestIntegrationRunReachabilitySmoke
+--- PASS: TestIntegrationRunReachabilitySmoke (10.04s)
+=== RUN   TestIntegrationSoakRespectsGlobalTimeout
+--- PASS: TestIntegrationSoakRespectsGlobalTimeout (2.02s)
+PASS
+ok  	netcheck/cmd/netcheck	12.338s

@@ -1,0 +1,11 @@
+covervars.go
+bandwidth.cover.go
+bufferbloat.cover.go
+checks.cover.go
+dns.cover.go
+http.cover.go
+local.cover.go
+parsers.cover.go
+path.cover.go
+reachability.cover.go
+./parsers_test.go

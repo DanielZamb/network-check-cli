@@ -1,0 +1,44 @@
+//line /Users/zambamon/Personal/scripts/network/internal/checks/reachability.go:1:1
+package checks
+
+import (
+	"context"
+	"fmt"
+	"netcheck/internal/config"
+	"netcheck/internal/eval"
+	"netcheck/internal/execx"
+	"netcheck/internal/model"
+	"time"
+)
+
+type ReachabilityCheck struct{ Target string }
+
+func (c ReachabilityCheck) ID() string    {goCover_ce70894fcd8a__32[0] = 1 ; goCover_ce70894fcd8a__32[1] = goCover_ce70894fcd8a_P ; goCover_ce70894fcd8a__32[2] = 32 ; goCover_ce70894fcd8a__32[3] = 1; return "reachability." + c.Target }
+func (c ReachabilityCheck) Group() string {goCover_ce70894fcd8a__33[0] = 1 ; goCover_ce70894fcd8a__33[1] = goCover_ce70894fcd8a_P ; goCover_ce70894fcd8a__33[2] = 33 ; goCover_ce70894fcd8a__33[3] = 1; return "reachability" }
+
+func (c ReachabilityCheck) Run(ctx context.Context, ex execx.Executor, cfg config.Config, timeoutSec int) model.CheckResult {goCover_ce70894fcd8a__34[0] = 9 ; goCover_ce70894fcd8a__34[1] = goCover_ce70894fcd8a_P ; goCover_ce70894fcd8a__34[2] = 34 ; goCover_ce70894fcd8a__34[3] = 1;
+	start := time.Now()
+	if _, err := ex.LookPath("ping"); err != nil {goCover_ce70894fcd8a__34[8] = 1;
+		return model.CheckResult{ID: c.ID(), Group: c.Group(), Target: c.Target, Status: model.StatusSkip, Error: "ping not found"}
+	}
+	goCover_ce70894fcd8a__34[4] = 1;res := runWithTimeout(ctx, timeoutSec, ex, "ping", "-c", "10", c.Target)
+	if res.Err != nil && res.Stdout == "" {goCover_ce70894fcd8a__34[9] = 1;
+		return model.CheckResult{ID: c.ID(), Group: c.Group(), Target: c.Target, Status: model.StatusFail, Error: res.Err.Error(), DurationMS: time.Since(start).Milliseconds()}
+	}
+	goCover_ce70894fcd8a__34[5] = 1;loss, avg, jitter, p95 := parsePing(res.Stdout)
+	status := eval.LowerIsBetter(loss, cfg.Thresholds.LossPassMax, cfg.Thresholds.LossWarnMax)
+	if status == model.StatusPass {goCover_ce70894fcd8a__34[10] = 1;
+		status = eval.LowerIsBetter(p95, cfg.Thresholds.RTTP95PassMaxMs, cfg.Thresholds.RTTP95WarnMaxMs)
+	}
+	goCover_ce70894fcd8a__34[6] = 1;if status == model.StatusPass {goCover_ce70894fcd8a__34[11] = 1;
+		status = eval.LowerIsBetter(jitter, cfg.Thresholds.JitterPassMaxMs, cfg.Thresholds.JitterWarnMaxMs)
+	}
+	goCover_ce70894fcd8a__34[7] = 1;return model.CheckResult{ID: c.ID(), Group: c.Group(), Target: c.Target, Status: status, Metrics: map[string]any{"loss_pct": loss, "avg_ms": avg, "rtt_p95_ms": p95, "jitter_ms": jitter}, Raw: res.Stdout, Error: stderrMsg(res.Stderr), DurationMS: time.Since(start).Milliseconds()}
+}
+
+func stderrMsg(s string) string {goCover_ce70894fcd8a__35[0] = 3 ; goCover_ce70894fcd8a__35[1] = goCover_ce70894fcd8a_P ; goCover_ce70894fcd8a__35[2] = 35 ; goCover_ce70894fcd8a__35[3] = 1;
+	if s == "" {goCover_ce70894fcd8a__35[5] = 1;
+		return ""
+	}
+	goCover_ce70894fcd8a__35[4] = 1;return fmt.Sprintf("stderr: %s", s)
+}

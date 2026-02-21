@@ -1,0 +1,30 @@
+//line /Users/zambamon/Personal/scripts/network/internal/checks/http.go:1:1
+package checks; import _cover_atomic_ "sync/atomic"
+
+import (
+	"context"
+	"netcheck/internal/config"
+	"netcheck/internal/eval"
+	"netcheck/internal/execx"
+	"netcheck/internal/model"
+	"time"
+)
+
+type HTTPCheck struct{ URL string }
+
+func (c HTTPCheck) ID() string    {_cover_atomic_.StoreUint32(&goCover_ce70894fcd8a__14[0], 1) ; _cover_atomic_.StoreUint32(&goCover_ce70894fcd8a__14[1], goCover_ce70894fcd8a_P) ; _cover_atomic_.StoreUint32(&goCover_ce70894fcd8a__14[2], 14) ; _cover_atomic_.AddUint32(&goCover_ce70894fcd8a__14[3], 1); return "http." + c.URL }
+func (c HTTPCheck) Group() string {_cover_atomic_.StoreUint32(&goCover_ce70894fcd8a__15[0], 1) ; _cover_atomic_.StoreUint32(&goCover_ce70894fcd8a__15[1], goCover_ce70894fcd8a_P) ; _cover_atomic_.StoreUint32(&goCover_ce70894fcd8a__15[2], 15) ; _cover_atomic_.AddUint32(&goCover_ce70894fcd8a__15[3], 1); return "http" }
+
+func (c HTTPCheck) Run(ctx context.Context, ex execx.Executor, cfg config.Config, timeoutSec int) model.CheckResult {_cover_atomic_.StoreUint32(&goCover_ce70894fcd8a__16[0], 3) ; _cover_atomic_.StoreUint32(&goCover_ce70894fcd8a__16[1], goCover_ce70894fcd8a_P) ; _cover_atomic_.StoreUint32(&goCover_ce70894fcd8a__16[2], 16) ; _cover_atomic_.AddUint32(&goCover_ce70894fcd8a__16[3], 1);
+	start := time.Now()
+	if _, err := ex.LookPath("curl"); err != nil {_cover_atomic_.AddUint32(&goCover_ce70894fcd8a__16[5], 1);
+		return model.CheckResult{ID: c.ID(), Group: c.Group(), Target: c.URL, Status: model.StatusSkip, Error: "curl not found"}
+	}
+	_cover_atomic_.AddUint32(&goCover_ce70894fcd8a__16[4], 1);res := ex.Run(ctx, "curl", "-w", "dns:%{time_namelookup} connect:%{time_connect} tls:%{time_appconnect} ttfb:%{time_starttransfer} total:%{time_total}", "-o", "/dev/null", "-s", c.URL)
+	m := parseCurlTimings(res.Stdout)
+	total := m["total"]
+	status := eval.LowerIsBetter(total, cfg.Thresholds.HTTPPassMaxMs, cfg.Thresholds.HTTPWarnMaxMs)
+	return model.CheckResult{ID: c.ID(), Group: c.Group(), Target: c.URL, Status: status, Metrics: map[string]any{"dns_ms": m["dns"], "connect_ms": m["connect"], "tls_ms": m["tls"], "ttfb_ms": m["ttfb"], "total_ms": total}, Raw: res.Stdout, Error: stderrMsg(res.Stderr), DurationMS: time.Since(start).Milliseconds()}
+}
+
+var _ = _cover_atomic_.LoadUint32

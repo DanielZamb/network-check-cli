@@ -1,0 +1,24 @@
+//line /Users/zambamon/Personal/scripts/network/internal/exitcode/exitcode.go:1:1
+package exitcode; import _cover_atomic_ "sync/atomic"
+
+import "netcheck/internal/model"
+
+const (
+	OK           = 0
+	ChecksFailed = 1
+	ConfigError  = 2
+	RuntimeError = 3
+	OutputError  = 4
+)
+
+func FromSummary(s model.Summary, strictWarn bool) int {_cover_atomic_.StoreUint32(&goCover_8e5dc847ee57__0[0], 5) ; _cover_atomic_.StoreUint32(&goCover_8e5dc847ee57__0[1], goCover_8e5dc847ee57_P) ; _cover_atomic_.StoreUint32(&goCover_8e5dc847ee57__0[2], 0) ; _cover_atomic_.AddUint32(&goCover_8e5dc847ee57__0[3], 1);
+	if s.Fail > 0 {_cover_atomic_.AddUint32(&goCover_8e5dc847ee57__0[6], 1);
+		return ChecksFailed
+	}
+	_cover_atomic_.AddUint32(&goCover_8e5dc847ee57__0[4], 1);if strictWarn && s.Warn > 0 {_cover_atomic_.AddUint32(&goCover_8e5dc847ee57__0[7], 1);
+		return ChecksFailed
+	}
+	_cover_atomic_.AddUint32(&goCover_8e5dc847ee57__0[5], 1);return OK
+}
+
+var _ = _cover_atomic_.LoadUint32

@@ -1,0 +1,97 @@
+//line /Users/zambamon/Personal/scripts/network/internal/runner/runner.go:1:1
+package runner; import _cover_atomic_ "sync/atomic"
+
+import (
+	"context"
+	"netcheck/internal/checks"
+	"netcheck/internal/config"
+	"netcheck/internal/eval"
+	"netcheck/internal/execx"
+	"netcheck/internal/model"
+	"netcheck/internal/schema"
+	"os"
+	"runtime"
+	"sort"
+	"strings"
+	"time"
+)
+
+type RunResult struct {
+	Report model.Report
+}
+
+func BuildChecks(cfg config.Config) []checks.Check {_cover_atomic_.StoreUint32(&goCover_19ea2b82c8a3__0[0], 9) ; _cover_atomic_.StoreUint32(&goCover_19ea2b82c8a3__0[1], goCover_19ea2b82c8a3_P) ; _cover_atomic_.StoreUint32(&goCover_19ea2b82c8a3__0[2], 0) ; _cover_atomic_.AddUint32(&goCover_19ea2b82c8a3__0[3], 1);
+	all := []checks.Check{checks.LocalCheck{}, checks.SpeedtestCheck{}, checks.IperfCheck{}}
+	for _, p := range cfg.Targets.Ping {_cover_atomic_.AddUint32(&goCover_19ea2b82c8a3__0[8], 1);
+		all = append(all, checks.ReachabilityCheck{Target: p})
+	}
+	_cover_atomic_.AddUint32(&goCover_19ea2b82c8a3__0[4], 1);for _, d := range cfg.Targets.DNSDomain {_cover_atomic_.AddUint32(&goCover_19ea2b82c8a3__0[9], 1);
+		all = append(all, checks.DNSCheck{Domain: d})
+	}
+	_cover_atomic_.AddUint32(&goCover_19ea2b82c8a3__0[5], 1);for _, u := range cfg.Targets.HTTPURLs {_cover_atomic_.AddUint32(&goCover_19ea2b82c8a3__0[10], 1);
+		all = append(all, checks.HTTPCheck{URL: u})
+	}
+	_cover_atomic_.AddUint32(&goCover_19ea2b82c8a3__0[6], 1);if len(cfg.Targets.Ping) > 0 {_cover_atomic_.AddUint32(&goCover_19ea2b82c8a3__0[11], 1);
+		all = append(all, checks.PathCheck{Target: cfg.Targets.Ping[0]})
+		all = append(all, checks.BufferbloatCheck{Target: cfg.Targets.Ping[0]})
+	}
+	_cover_atomic_.AddUint32(&goCover_19ea2b82c8a3__0[7], 1);return all
+}
+
+func filterChecks(all []checks.Check, selectGroups, skipGroups []string) []checks.Check {_cover_atomic_.StoreUint32(&goCover_19ea2b82c8a3__1[0], 13) ; _cover_atomic_.StoreUint32(&goCover_19ea2b82c8a3__1[1], goCover_19ea2b82c8a3_P) ; _cover_atomic_.StoreUint32(&goCover_19ea2b82c8a3__1[2], 1) ; _cover_atomic_.AddUint32(&goCover_19ea2b82c8a3__1[3], 1);
+	if len(selectGroups) == 0 && len(skipGroups) == 0 {_cover_atomic_.AddUint32(&goCover_19ea2b82c8a3__1[8], 1);
+		return all
+	}
+	_cover_atomic_.AddUint32(&goCover_19ea2b82c8a3__1[4], 1);sel := map[string]bool{}
+	skp := map[string]bool{}
+	for _, g := range selectGroups {_cover_atomic_.AddUint32(&goCover_19ea2b82c8a3__1[9], 1);
+		sel[strings.TrimSpace(g)] = true
+	}
+	_cover_atomic_.AddUint32(&goCover_19ea2b82c8a3__1[5], 1);for _, g := range skipGroups {_cover_atomic_.AddUint32(&goCover_19ea2b82c8a3__1[10], 1);
+		skp[strings.TrimSpace(g)] = true
+	}
+	_cover_atomic_.AddUint32(&goCover_19ea2b82c8a3__1[6], 1);out := make([]checks.Check, 0, len(all))
+	for _, c := range all {_cover_atomic_.AddUint32(&goCover_19ea2b82c8a3__1[11], 1);
+		if len(sel) > 0 && !sel[c.Group()] {_cover_atomic_.AddUint32(&goCover_19ea2b82c8a3__1[14], 1);
+			continue
+		}
+		_cover_atomic_.AddUint32(&goCover_19ea2b82c8a3__1[12], 1);if skp[c.Group()] {_cover_atomic_.AddUint32(&goCover_19ea2b82c8a3__1[15], 1);
+			continue
+		}
+		_cover_atomic_.AddUint32(&goCover_19ea2b82c8a3__1[13], 1);out = append(out, c)
+	}
+	_cover_atomic_.AddUint32(&goCover_19ea2b82c8a3__1[7], 1);return out
+}
+
+func RunOnce(ctx context.Context, ex execx.Executor, cfg config.Config, opts model.RunOptions, version, commit string) (RunResult, error) {_cover_atomic_.StoreUint32(&goCover_19ea2b82c8a3__2[0], 6) ; _cover_atomic_.StoreUint32(&goCover_19ea2b82c8a3__2[1], goCover_19ea2b82c8a3_P) ; _cover_atomic_.StoreUint32(&goCover_19ea2b82c8a3__2[2], 2) ; _cover_atomic_.AddUint32(&goCover_19ea2b82c8a3__2[3], 1);
+	all := filterChecks(BuildChecks(cfg), opts.Select, opts.Skip)
+	res := make([]model.CheckResult, 0, len(all))
+	summary := model.Summary{}
+	for _, c := range all {_cover_atomic_.AddUint32(&goCover_19ea2b82c8a3__2[6], 1);
+		cr := c.Run(ctx, ex, cfg, cfg.PerCheckTimeoutSec)
+		summary.Add(cr.Status)
+		res = append(res, cr)
+		if opts.FailFast && cr.Status == model.StatusFail {_cover_atomic_.AddUint32(&goCover_19ea2b82c8a3__2[7], 1);
+			break
+		}
+	}
+	_cover_atomic_.AddUint32(&goCover_19ea2b82c8a3__2[4], 1);sort.Slice(res, func(i, j int) bool {_cover_atomic_.AddUint32(&goCover_19ea2b82c8a3__2[8], 1); return res[i].ID < res[j].ID })
+	_cover_atomic_.AddUint32(&goCover_19ea2b82c8a3__2[5], 1);host, _ := os.Hostname()
+	report := model.Report{
+		SchemaVersion: schema.Version,
+		Timestamp:     time.Now().UTC(),
+		Host:          host,
+		OS:            runtime.GOOS,
+		Version:       version,
+		GitCommit:     commit,
+		RunID:         opts.RunID,
+		Labels:        opts.Labels,
+		Config:        cfg.AsMap(),
+		Checks:        res,
+		Summary:       summary,
+		Score:         eval.Score(res),
+	}
+	return RunResult{Report: report}, nil
+}
+
+var _ = _cover_atomic_.LoadUint32

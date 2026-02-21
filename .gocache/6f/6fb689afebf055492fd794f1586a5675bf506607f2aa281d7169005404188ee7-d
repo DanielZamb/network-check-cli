@@ -1,0 +1,32 @@
+//line /Users/zambamon/Personal/scripts/network/internal/checks/bufferbloat.go:1:1
+package checks; import _cover_atomic_ "sync/atomic"
+
+import (
+	"context"
+	"netcheck/internal/config"
+	"netcheck/internal/eval"
+	"netcheck/internal/execx"
+	"netcheck/internal/model"
+	"time"
+)
+
+type BufferbloatCheck struct{ Target string }
+
+func (c BufferbloatCheck) ID() string    {_cover_atomic_.StoreUint32(&goCover_ce70894fcd8a__8[0], 1) ; _cover_atomic_.StoreUint32(&goCover_ce70894fcd8a__8[1], goCover_ce70894fcd8a_P) ; _cover_atomic_.StoreUint32(&goCover_ce70894fcd8a__8[2], 8) ; _cover_atomic_.AddUint32(&goCover_ce70894fcd8a__8[3], 1); return "bufferbloat." + c.Target }
+func (c BufferbloatCheck) Group() string {_cover_atomic_.StoreUint32(&goCover_ce70894fcd8a__9[0], 1) ; _cover_atomic_.StoreUint32(&goCover_ce70894fcd8a__9[1], goCover_ce70894fcd8a_P) ; _cover_atomic_.StoreUint32(&goCover_ce70894fcd8a__9[2], 9) ; _cover_atomic_.AddUint32(&goCover_ce70894fcd8a__9[3], 1); return "bufferbloat" }
+
+func (c BufferbloatCheck) Run(ctx context.Context, ex execx.Executor, cfg config.Config, timeoutSec int) model.CheckResult {_cover_atomic_.StoreUint32(&goCover_ce70894fcd8a__10[0], 3) ; _cover_atomic_.StoreUint32(&goCover_ce70894fcd8a__10[1], goCover_ce70894fcd8a_P) ; _cover_atomic_.StoreUint32(&goCover_ce70894fcd8a__10[2], 10) ; _cover_atomic_.AddUint32(&goCover_ce70894fcd8a__10[3], 1);
+	start := time.Now()
+	if _, err := ex.LookPath("ping"); err != nil {_cover_atomic_.AddUint32(&goCover_ce70894fcd8a__10[5], 1);
+		return model.CheckResult{ID: c.ID(), Group: c.Group(), Target: c.Target, Status: model.StatusSkip, Error: "ping not found"}
+	}
+	_cover_atomic_.AddUint32(&goCover_ce70894fcd8a__10[4], 1);idle := ex.Run(ctx, "ping", "-c", "10", c.Target)
+	_, idleAvg, _ := parsePing(idle.Stdout)
+	loaded := ex.Run(ctx, "ping", "-c", "10", c.Target)
+	_, loadedAvg, _ := parsePing(loaded.Stdout)
+	delta := loadedAvg - idleAvg
+	status := eval.LowerIsBetter(delta, cfg.Thresholds.LoadedLatencyPassDeltaMs, cfg.Thresholds.LoadedLatencyWarnDeltaMs)
+	return model.CheckResult{ID: c.ID(), Group: c.Group(), Target: c.Target, Status: status, Metrics: map[string]any{"idle_ms": idleAvg, "loaded_ms": loadedAvg, "delta_ms": delta}, Raw: loaded.Stdout, DurationMS: time.Since(start).Milliseconds()}
+}
+
+var _ = _cover_atomic_.LoadUint32

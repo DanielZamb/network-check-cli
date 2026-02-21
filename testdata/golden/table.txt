@@ -1,0 +1,13 @@
+ID                   GROUP      STATUS  TARGET
+--                   -----      ------  ------
+bandwidth.speedtest  bandwidth  warn    
+dns.google.com       dns        pass    
+
+Summary  pass=1 warn=1 fail=0 skip=0 total=2    
+Score    100                                    
+
+Group Summary                                   
+GROUP          SCORE  MEASURED                  EXPECTED
+-----          -----  --------                  --------
+bandwidth      60     dl=120.0Mbps ul=20.0Mbps  dl>=300.0Mbps ul>=30.0Mbps pass@80%
+dns            100    avg_query=22.0ms          pass<50ms warn<=120ms

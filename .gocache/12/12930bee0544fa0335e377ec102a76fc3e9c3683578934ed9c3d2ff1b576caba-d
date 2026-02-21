@@ -1,0 +1,36 @@
+//line /Users/zambamon/Personal/scripts/network/internal/events/events.go:1:1
+package events; import _cover_atomic_ "sync/atomic"
+
+import (
+	"encoding/json"
+	"io"
+	"time"
+)
+
+type Event struct {
+	EventType string         `json:"event_type"`
+	Timestamp time.Time      `json:"timestamp"`
+	RunID     string         `json:"run_id"`
+	Sequence  int            `json:"sequence"`
+	Payload   map[string]any `json:"payload,omitempty"`
+}
+
+type Writer struct {
+	w   io.Writer
+	seq int
+}
+
+func NewWriter(w io.Writer) *Writer {_cover_atomic_.StoreUint32(&goCover_a643eb35acbd__0[0], 1) ; _cover_atomic_.StoreUint32(&goCover_a643eb35acbd__0[1], goCover_a643eb35acbd_P) ; _cover_atomic_.StoreUint32(&goCover_a643eb35acbd__0[2], 0) ; _cover_atomic_.AddUint32(&goCover_a643eb35acbd__0[3], 1); return &Writer{w: w} }
+
+func (wr *Writer) Emit(eventType, runID string, payload map[string]any) error {_cover_atomic_.StoreUint32(&goCover_a643eb35acbd__1[0], 3) ; _cover_atomic_.StoreUint32(&goCover_a643eb35acbd__1[1], goCover_a643eb35acbd_P) ; _cover_atomic_.StoreUint32(&goCover_a643eb35acbd__1[2], 1) ; _cover_atomic_.AddUint32(&goCover_a643eb35acbd__1[3], 1);
+	wr.seq++
+	e := Event{EventType: eventType, Timestamp: time.Now().UTC(), RunID: runID, Sequence: wr.seq, Payload: payload}
+	b, err := json.Marshal(e)
+	if err != nil {_cover_atomic_.AddUint32(&goCover_a643eb35acbd__1[5], 1);
+		return err
+	}
+	_cover_atomic_.AddUint32(&goCover_a643eb35acbd__1[4], 1);_, err = wr.w.Write(append(b, '\n'))
+	return err
+}
+
+var _ = _cover_atomic_.LoadUint32

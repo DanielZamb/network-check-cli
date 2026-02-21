@@ -1,0 +1,50 @@
+//line /Users/zambamon/Personal/scripts/network/internal/checks/parsers.go:1:1
+package checks
+
+import (
+	"regexp"
+	"strconv"
+	"strings"
+)
+
+var (
+	packetLossRe = regexp.MustCompile(`([0-9.]+)% packet loss`)
+	rttRe        = regexp.MustCompile(`min/avg/max/(?:stddev|mdev) = ([0-9.]+)/([0-9.]+)/([0-9.]+)/([0-9.]+) ms`)
+	digMsRe      = regexp.MustCompile(`Query time: ([0-9]+) msec`)
+)
+
+func parsePing(output string) (loss, avg, jitter float64) {goCover_ce70894fcd8a__22[0] = 5 ; goCover_ce70894fcd8a__22[1] = goCover_ce70894fcd8a_P ; goCover_ce70894fcd8a__22[2] = 22 ; goCover_ce70894fcd8a__22[3] = 1;
+	if m := packetLossRe.FindStringSubmatch(output); len(m) == 2 {goCover_ce70894fcd8a__22[6] = 1;
+		loss, _ = strconv.ParseFloat(m[1], 64)
+	}
+	goCover_ce70894fcd8a__22[4] = 1;if m := rttRe.FindStringSubmatch(output); len(m) == 5 {goCover_ce70894fcd8a__22[7] = 1;
+		avg, _ = strconv.ParseFloat(m[2], 64)
+		jitter, _ = strconv.ParseFloat(m[4], 64)
+	}
+	goCover_ce70894fcd8a__22[5] = 1;return
+}
+
+func parseDigMS(output string) float64 {goCover_ce70894fcd8a__23[0] = 3 ; goCover_ce70894fcd8a__23[1] = goCover_ce70894fcd8a_P ; goCover_ce70894fcd8a__23[2] = 23 ; goCover_ce70894fcd8a__23[3] = 1;
+	if m := digMsRe.FindStringSubmatch(output); len(m) == 2 {goCover_ce70894fcd8a__23[5] = 1;
+		v, _ := strconv.ParseFloat(m[1], 64)
+		return v
+	}
+	goCover_ce70894fcd8a__23[4] = 1;return 0
+}
+
+func parseCurlTimings(output string) map[string]float64 {goCover_ce70894fcd8a__24[0] = 7 ; goCover_ce70894fcd8a__24[1] = goCover_ce70894fcd8a_P ; goCover_ce70894fcd8a__24[2] = 24 ; goCover_ce70894fcd8a__24[3] = 1;
+	parts := strings.Fields(strings.TrimSpace(output))
+	res := map[string]float64{}
+	for _, p := range parts {goCover_ce70894fcd8a__24[5] = 1;
+		kv := strings.SplitN(p, ":", 2)
+		if len(kv) != 2 {goCover_ce70894fcd8a__24[8] = 1;
+			continue
+		}
+		goCover_ce70894fcd8a__24[6] = 1;v, err := strconv.ParseFloat(kv[1], 64)
+		if err != nil {goCover_ce70894fcd8a__24[9] = 1;
+			continue
+		}
+		goCover_ce70894fcd8a__24[7] = 1;res[kv[0]] = v * 1000
+	}
+	goCover_ce70894fcd8a__24[4] = 1;return res
+}

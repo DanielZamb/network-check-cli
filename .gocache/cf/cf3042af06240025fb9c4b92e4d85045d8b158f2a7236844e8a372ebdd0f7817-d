@@ -1,0 +1,46 @@
+//line /Users/zambamon/Personal/scripts/network/internal/checks/reachability.go:1:1
+package checks; import _cover_atomic_ "sync/atomic"
+
+import (
+	"context"
+	"fmt"
+	"netcheck/internal/config"
+	"netcheck/internal/eval"
+	"netcheck/internal/execx"
+	"netcheck/internal/model"
+	"time"
+)
+
+type ReachabilityCheck struct{ Target string }
+
+func (c ReachabilityCheck) ID() string    {_cover_atomic_.StoreUint32(&goCover_ce70894fcd8a__26[0], 1) ; _cover_atomic_.StoreUint32(&goCover_ce70894fcd8a__26[1], goCover_ce70894fcd8a_P) ; _cover_atomic_.StoreUint32(&goCover_ce70894fcd8a__26[2], 26) ; _cover_atomic_.AddUint32(&goCover_ce70894fcd8a__26[3], 1); return "reachability." + c.Target }
+func (c ReachabilityCheck) Group() string {_cover_atomic_.StoreUint32(&goCover_ce70894fcd8a__27[0], 1) ; _cover_atomic_.StoreUint32(&goCover_ce70894fcd8a__27[1], goCover_ce70894fcd8a_P) ; _cover_atomic_.StoreUint32(&goCover_ce70894fcd8a__27[2], 27) ; _cover_atomic_.AddUint32(&goCover_ce70894fcd8a__27[3], 1); return "reachability" }
+
+func (c ReachabilityCheck) Run(ctx context.Context, ex execx.Executor, cfg config.Config, timeoutSec int) model.CheckResult {_cover_atomic_.StoreUint32(&goCover_ce70894fcd8a__28[0], 9) ; _cover_atomic_.StoreUint32(&goCover_ce70894fcd8a__28[1], goCover_ce70894fcd8a_P) ; _cover_atomic_.StoreUint32(&goCover_ce70894fcd8a__28[2], 28) ; _cover_atomic_.AddUint32(&goCover_ce70894fcd8a__28[3], 1);
+	start := time.Now()
+	if _, err := ex.LookPath("ping"); err != nil {_cover_atomic_.AddUint32(&goCover_ce70894fcd8a__28[8], 1);
+		return model.CheckResult{ID: c.ID(), Group: c.Group(), Target: c.Target, Status: model.StatusSkip, Error: "ping not found"}
+	}
+	_cover_atomic_.AddUint32(&goCover_ce70894fcd8a__28[4], 1);res := ex.Run(ctx, "ping", "-c", "10", c.Target)
+	if res.Err != nil && res.Stdout == "" {_cover_atomic_.AddUint32(&goCover_ce70894fcd8a__28[9], 1);
+		return model.CheckResult{ID: c.ID(), Group: c.Group(), Target: c.Target, Status: model.StatusFail, Error: res.Err.Error(), DurationMS: time.Since(start).Milliseconds()}
+	}
+	_cover_atomic_.AddUint32(&goCover_ce70894fcd8a__28[5], 1);loss, avg, jitter := parsePing(res.Stdout)
+	status := eval.LowerIsBetter(loss, cfg.Thresholds.LossPassMax, cfg.Thresholds.LossWarnMax)
+	if status == model.StatusPass {_cover_atomic_.AddUint32(&goCover_ce70894fcd8a__28[10], 1);
+		status = eval.LowerIsBetter(avg, cfg.Thresholds.RTTP95PassMaxMs, cfg.Thresholds.RTTP95WarnMaxMs)
+	}
+	_cover_atomic_.AddUint32(&goCover_ce70894fcd8a__28[6], 1);if status == model.StatusPass {_cover_atomic_.AddUint32(&goCover_ce70894fcd8a__28[11], 1);
+		status = eval.LowerIsBetter(jitter, cfg.Thresholds.JitterPassMaxMs, cfg.Thresholds.JitterWarnMaxMs)
+	}
+	_cover_atomic_.AddUint32(&goCover_ce70894fcd8a__28[7], 1);return model.CheckResult{ID: c.ID(), Group: c.Group(), Target: c.Target, Status: status, Metrics: map[string]any{"loss_pct": loss, "avg_ms": avg, "jitter_ms": jitter}, Raw: res.Stdout, Error: stderrMsg(res.Stderr), DurationMS: time.Since(start).Milliseconds()}
+}
+
+func stderrMsg(s string) string {_cover_atomic_.StoreUint32(&goCover_ce70894fcd8a__29[0], 3) ; _cover_atomic_.StoreUint32(&goCover_ce70894fcd8a__29[1], goCover_ce70894fcd8a_P) ; _cover_atomic_.StoreUint32(&goCover_ce70894fcd8a__29[2], 29) ; _cover_atomic_.AddUint32(&goCover_ce70894fcd8a__29[3], 1);
+	if s == "" {_cover_atomic_.AddUint32(&goCover_ce70894fcd8a__29[5], 1);
+		return ""
+	}
+	_cover_atomic_.AddUint32(&goCover_ce70894fcd8a__29[4], 1);return fmt.Sprintf("stderr: %s", s)
+}
+
+var _ = _cover_atomic_.LoadUint32

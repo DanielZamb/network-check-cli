@@ -1,0 +1,43 @@
+//line /Users/zambamon/Personal/scripts/network/internal/checks/path.go:1:1
+package checks
+
+import (
+	"context"
+	"netcheck/internal/config"
+	"netcheck/internal/execx"
+	"netcheck/internal/model"
+	"strings"
+	"time"
+)
+
+type PathCheck struct{ Target string }
+
+func (c PathCheck) ID() string    {goCover_ce70894fcd8a__25[0] = 1 ; goCover_ce70894fcd8a__25[1] = goCover_ce70894fcd8a_P ; goCover_ce70894fcd8a__25[2] = 25 ; goCover_ce70894fcd8a__25[3] = 1; return "path." + c.Target }
+func (c PathCheck) Group() string {goCover_ce70894fcd8a__26[0] = 1 ; goCover_ce70894fcd8a__26[1] = goCover_ce70894fcd8a_P ; goCover_ce70894fcd8a__26[2] = 26 ; goCover_ce70894fcd8a__26[3] = 1; return "path" }
+
+func (c PathCheck) Run(ctx context.Context, ex execx.Executor, cfg config.Config, timeoutSec int) model.CheckResult {goCover_ce70894fcd8a__27[0] = 13 ; goCover_ce70894fcd8a__27[1] = goCover_ce70894fcd8a_P ; goCover_ce70894fcd8a__27[2] = 27 ; goCover_ce70894fcd8a__27[3] = 1;
+	start := time.Now()
+	if _, err := ex.LookPath("mtr"); err != nil {goCover_ce70894fcd8a__27[7] = 1;
+		if _, terr := ex.LookPath("traceroute"); terr != nil {goCover_ce70894fcd8a__27[11] = 1;
+			return model.CheckResult{ID: c.ID(), Group: c.Group(), Target: c.Target, Status: model.StatusSkip, Error: "mtr and traceroute not found"}
+		}
+		goCover_ce70894fcd8a__27[8] = 1;res := runWithTimeout(ctx, timeoutSec, ex, "traceroute", "-m", "15", c.Target)
+		if res.Err != nil && res.Stdout == "" {goCover_ce70894fcd8a__27[12] = 1;
+			return model.CheckResult{ID: c.ID(), Group: c.Group(), Target: c.Target, Status: model.StatusFail, Error: res.Err.Error(), DurationMS: time.Since(start).Milliseconds()}
+		}
+		goCover_ce70894fcd8a__27[9] = 1;status := model.StatusPass
+		if strings.Count(res.Stdout, "*") > 10 {goCover_ce70894fcd8a__27[13] = 1;
+			status = model.StatusWarn
+		}
+		goCover_ce70894fcd8a__27[10] = 1;return model.CheckResult{ID: c.ID(), Group: c.Group(), Target: c.Target, Status: status, Raw: res.Stdout, Error: stderrMsg(res.Stderr), DurationMS: time.Since(start).Milliseconds()}
+	}
+	goCover_ce70894fcd8a__27[4] = 1;res := runWithTimeout(ctx, timeoutSec, ex, "mtr", "-rwzc", "10", c.Target)
+	if res.Err != nil && res.Stdout == "" {goCover_ce70894fcd8a__27[14] = 1;
+		return model.CheckResult{ID: c.ID(), Group: c.Group(), Target: c.Target, Status: model.StatusFail, Error: res.Err.Error(), DurationMS: time.Since(start).Milliseconds()}
+	}
+	goCover_ce70894fcd8a__27[5] = 1;status := model.StatusPass
+	if strings.Contains(res.Stdout, "100.0%") {goCover_ce70894fcd8a__27[15] = 1;
+		status = model.StatusFail
+	}
+	goCover_ce70894fcd8a__27[6] = 1;return model.CheckResult{ID: c.ID(), Group: c.Group(), Target: c.Target, Status: status, Raw: res.Stdout, Error: stderrMsg(res.Stderr), DurationMS: time.Since(start).Milliseconds()}
+}

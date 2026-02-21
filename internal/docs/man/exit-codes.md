@@ -1,0 +1,7 @@
+# netcheck exit codes
+
+- `0` success (pass/warn only unless strict warn mode)
+- `1` check failures
+- `2` config/usage error
+- `3` runtime error
+- `4` output/serialization error

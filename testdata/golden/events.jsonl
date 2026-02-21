@@ -1,0 +1,2 @@
+{"event_type":"run_started","timestamp":"2023-11-14T22:13:20Z","run_id":"r1","sequence":1,"payload":{"cmd":"soak"}}
+{"event_type":"check_result","timestamp":"2023-11-14T22:13:20Z","run_id":"r1","sequence":2,"payload":{"id":"dns.google.com","status":"pass"}}

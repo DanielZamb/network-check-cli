@@ -1,0 +1,47 @@
+//line /Users/zambamon/Personal/scripts/network/internal/checks/local.go:1:1
+package checks; import _cover_atomic_ "sync/atomic"
+
+import (
+	"context"
+	"netcheck/internal/config"
+	"netcheck/internal/eval"
+	"netcheck/internal/execx"
+	"netcheck/internal/model"
+	"strings"
+	"time"
+)
+
+type LocalCheck struct{}
+
+func (LocalCheck) ID() string    {_cover_atomic_.StoreUint32(&goCover_ce70894fcd8a__17[0], 1) ; _cover_atomic_.StoreUint32(&goCover_ce70894fcd8a__17[1], goCover_ce70894fcd8a_P) ; _cover_atomic_.StoreUint32(&goCover_ce70894fcd8a__17[2], 17) ; _cover_atomic_.AddUint32(&goCover_ce70894fcd8a__17[3], 1); return "local.gateway" }
+func (LocalCheck) Group() string {_cover_atomic_.StoreUint32(&goCover_ce70894fcd8a__18[0], 1) ; _cover_atomic_.StoreUint32(&goCover_ce70894fcd8a__18[1], goCover_ce70894fcd8a_P) ; _cover_atomic_.StoreUint32(&goCover_ce70894fcd8a__18[2], 18) ; _cover_atomic_.AddUint32(&goCover_ce70894fcd8a__18[3], 1); return "local" }
+
+func (LocalCheck) Run(ctx context.Context, ex execx.Executor, cfg config.Config, timeoutSec int) model.CheckResult {_cover_atomic_.StoreUint32(&goCover_ce70894fcd8a__19[0], 11) ; _cover_atomic_.StoreUint32(&goCover_ce70894fcd8a__19[1], goCover_ce70894fcd8a_P) ; _cover_atomic_.StoreUint32(&goCover_ce70894fcd8a__19[2], 19) ; _cover_atomic_.AddUint32(&goCover_ce70894fcd8a__19[3], 1);
+	start := time.Now()
+	if _, err := ex.LookPath("netstat"); err != nil {_cover_atomic_.AddUint32(&goCover_ce70894fcd8a__19[8], 1);
+		return model.CheckResult{ID: "local.gateway", Group: "local", Status: model.StatusSkip, Error: "netstat not found"}
+	}
+	_cover_atomic_.AddUint32(&goCover_ce70894fcd8a__19[4], 1);res := ex.Run(ctx, "netstat", "-rn")
+	if res.Err != nil {_cover_atomic_.AddUint32(&goCover_ce70894fcd8a__19[9], 1);
+		return model.CheckResult{ID: "local.gateway", Group: "local", Status: model.StatusFail, Error: res.Err.Error(), DurationMS: time.Since(start).Milliseconds()}
+	}
+	_cover_atomic_.AddUint32(&goCover_ce70894fcd8a__19[5], 1);gw := ""
+	for _, line := range strings.Split(res.Stdout, "\n") {_cover_atomic_.AddUint32(&goCover_ce70894fcd8a__19[10], 1);
+		if strings.HasPrefix(strings.TrimSpace(line), "default") {_cover_atomic_.AddUint32(&goCover_ce70894fcd8a__19[11], 1);
+			fields := strings.Fields(line)
+			if len(fields) > 1 {_cover_atomic_.AddUint32(&goCover_ce70894fcd8a__19[12], 1);
+				gw = fields[1]
+				break
+			}
+		}
+	}
+	_cover_atomic_.AddUint32(&goCover_ce70894fcd8a__19[6], 1);if gw == "" {_cover_atomic_.AddUint32(&goCover_ce70894fcd8a__19[13], 1);
+		return model.CheckResult{ID: "local.gateway", Group: "local", Status: model.StatusWarn, Error: "default gateway not detected", DurationMS: time.Since(start).Milliseconds()}
+	}
+	_cover_atomic_.AddUint32(&goCover_ce70894fcd8a__19[7], 1);ping := ex.Run(ctx, "ping", "-c", "10", gw)
+	loss, avg, jitter := parsePing(ping.Stdout)
+	status := eval.LowerIsBetter(loss, cfg.Thresholds.LossPassMax, cfg.Thresholds.LossWarnMax)
+	return model.CheckResult{ID: "local.gateway", Group: "local", Target: gw, Status: status, Metrics: map[string]any{"loss_pct": loss, "avg_ms": avg, "jitter_ms": jitter}, Raw: ping.Stdout, DurationMS: time.Since(start).Milliseconds()}
+}
+
+var _ = _cover_atomic_.LoadUint32

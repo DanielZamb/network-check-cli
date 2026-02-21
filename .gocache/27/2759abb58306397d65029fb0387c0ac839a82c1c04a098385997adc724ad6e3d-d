@@ -1,0 +1,4 @@
+./main.go
+./verbose_ui.go
+./main_test.go
+./verbose_ui_test.go

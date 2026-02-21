@@ -1,0 +1,64 @@
+//line /Users/zambamon/Personal/scripts/network/internal/compare/compare.go:1:1
+package compare
+
+import (
+	"encoding/json"
+	"fmt"
+	"netcheck/internal/model"
+	"os"
+	"sort"
+	"text/tabwriter"
+)
+
+type Item struct {
+	ID             string       `json:"id"`
+	BeforeStatus   model.Status `json:"before_status"`
+	AfterStatus    model.Status `json:"after_status"`
+	BeforeDuration int64        `json:"before_duration_ms"`
+	AfterDuration  int64        `json:"after_duration_ms"`
+}
+
+type Diff struct {
+	BeforeScore int    `json:"before_score"`
+	AfterScore  int    `json:"after_score"`
+	Items       []Item `json:"items"`
+}
+
+func Load(path string) (model.Report, error) {goCover_ccf2b9f34d09__0[0] = 3 ; goCover_ccf2b9f34d09__0[1] = goCover_ccf2b9f34d09_P ; goCover_ccf2b9f34d09__0[2] = 0 ; goCover_ccf2b9f34d09__0[3] = 1;
+	var r model.Report
+	b, err := os.ReadFile(path)
+	if err != nil {goCover_ccf2b9f34d09__0[5] = 1;
+		return r, err
+	}
+	goCover_ccf2b9f34d09__0[4] = 1;err = json.Unmarshal(b, &r)
+	return r, err
+}
+
+func Build(before, after model.Report) Diff {goCover_ccf2b9f34d09__1[0] = 7 ; goCover_ccf2b9f34d09__1[1] = goCover_ccf2b9f34d09_P ; goCover_ccf2b9f34d09__1[2] = 1 ; goCover_ccf2b9f34d09__1[3] = 1;
+	bm := map[string]model.CheckResult{}
+	for _, c := range before.Checks {goCover_ccf2b9f34d09__1[7] = 1;
+		bm[c.ID] = c
+	}
+	goCover_ccf2b9f34d09__1[4] = 1;items := make([]Item, 0, len(after.Checks))
+	for _, c := range after.Checks {goCover_ccf2b9f34d09__1[8] = 1;
+		b := bm[c.ID]
+		items = append(items, Item{ID: c.ID, BeforeStatus: b.Status, AfterStatus: c.Status, BeforeDuration: b.DurationMS, AfterDuration: c.DurationMS})
+	}
+	goCover_ccf2b9f34d09__1[5] = 1;sort.Slice(items, func(i, j int) bool {goCover_ccf2b9f34d09__1[9] = 1; return items[i].ID < items[j].ID })
+	goCover_ccf2b9f34d09__1[6] = 1;return Diff{BeforeScore: before.Score, AfterScore: after.Score, Items: items}
+}
+
+func WriteTable(path string, d Diff) error {goCover_ccf2b9f34d09__2[0] = 5 ; goCover_ccf2b9f34d09__2[1] = goCover_ccf2b9f34d09_P ; goCover_ccf2b9f34d09__2[2] = 2 ; goCover_ccf2b9f34d09__2[3] = 1;
+	f, err := os.Create(path)
+	if err != nil {goCover_ccf2b9f34d09__2[6] = 1;
+		return err
+	}
+	goCover_ccf2b9f34d09__2[4] = 1;defer f.Close()
+	tw := tabwriter.NewWriter(f, 0, 4, 2, ' ', 0)
+	fmt.Fprintf(tw, "ID\tBEFORE\tAFTER\tBEFORE_MS\tAFTER_MS\n")
+	for _, it := range d.Items {goCover_ccf2b9f34d09__2[7] = 1;
+		fmt.Fprintf(tw, "%s\t%s\t%s\t%d\t%d\n", it.ID, it.BeforeStatus, it.AfterStatus, it.BeforeDuration, it.AfterDuration)
+	}
+	goCover_ccf2b9f34d09__2[5] = 1;fmt.Fprintf(tw, "\nScore\t%d\t%d\t\t\n", d.BeforeScore, d.AfterScore)
+	return tw.Flush()
+}

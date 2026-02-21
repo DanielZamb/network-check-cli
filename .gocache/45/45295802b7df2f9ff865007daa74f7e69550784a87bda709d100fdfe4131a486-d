@@ -1,0 +1,305 @@
+//line /Users/zambamon/Personal/scripts/network/cmd/netcheck/main.go:1:1
+package main; import _cover_atomic_ "sync/atomic"; import _ "runtime/coverage"
+
+import (
+	"context"
+	"encoding/json"
+	"errors"
+	"flag"
+	"fmt"
+	"io"
+	"netcheck/internal/compare"
+	"netcheck/internal/config"
+	"netcheck/internal/docs"
+	"netcheck/internal/events"
+	"netcheck/internal/execx"
+	"netcheck/internal/exitcode"
+	"netcheck/internal/model"
+	"netcheck/internal/output"
+	"netcheck/internal/runner"
+	"os"
+	"path/filepath"
+	"strings"
+	"time"
+)
+
+var (
+	version = "dev"
+	commit  = ""
+)
+
+func main() {_cover_atomic_.StoreUint32(&goCover_9bd998b4cba1__0[0], 1) ; _cover_atomic_.StoreUint32(&goCover_9bd998b4cba1__0[1], goCover_9bd998b4cba1_P) ; _cover_atomic_.StoreUint32(&goCover_9bd998b4cba1__0[2], 0) ; _cover_atomic_.AddUint32(&goCover_9bd998b4cba1__0[3], 1);
+	os.Exit(runCLI(context.Background(), os.Args[1:], os.Stdout, os.Stderr, execx.RealExecutor{}))
+}
+
+func runCLI(ctx context.Context, args []string, stdout, stderr io.Writer, ex execx.Executor) int {_cover_atomic_.StoreUint32(&goCover_9bd998b4cba1__1[0], 8) ; _cover_atomic_.StoreUint32(&goCover_9bd998b4cba1__1[1], goCover_9bd998b4cba1_P) ; _cover_atomic_.StoreUint32(&goCover_9bd998b4cba1__1[2], 1) ; _cover_atomic_.AddUint32(&goCover_9bd998b4cba1__1[3], 1);
+	if len(args) == 0 {_cover_atomic_.AddUint32(&goCover_9bd998b4cba1__1[5], 1);
+		fmt.Fprintln(stderr, "usage: netcheck <run|soak|compare|man>")
+		return exitcode.ConfigError
+	}
+	_cover_atomic_.AddUint32(&goCover_9bd998b4cba1__1[4], 1);switch args[0] {
+	case "run":_cover_atomic_.AddUint32(&goCover_9bd998b4cba1__1[6], 1);
+		return cmdRun(ctx, args[1:], stdout, stderr, ex)
+	case "soak":_cover_atomic_.AddUint32(&goCover_9bd998b4cba1__1[7], 1);
+		return cmdSoak(ctx, args[1:], stdout, stderr, ex)
+	case "compare":_cover_atomic_.AddUint32(&goCover_9bd998b4cba1__1[8], 1);
+		return cmdCompare(args[1:], stdout, stderr)
+	case "man":_cover_atomic_.AddUint32(&goCover_9bd998b4cba1__1[9], 1);
+		return cmdMan(args[1:], stdout, stderr)
+	default:_cover_atomic_.AddUint32(&goCover_9bd998b4cba1__1[10], 1);
+		fmt.Fprintln(stderr, "unknown command:", args[0])
+		return exitcode.ConfigError
+	}
+}
+
+func parseCommon(fs *flag.FlagSet) *model.RunOptions {_cover_atomic_.StoreUint32(&goCover_9bd998b4cba1__2[0], 1) ; _cover_atomic_.StoreUint32(&goCover_9bd998b4cba1__2[1], goCover_9bd998b4cba1_P) ; _cover_atomic_.StoreUint32(&goCover_9bd998b4cba1__2[2], 2) ; _cover_atomic_.AddUint32(&goCover_9bd998b4cba1__2[3], 1);
+	opts := &model.RunOptions{}
+	var labels, selectGroups, skipGroups string
+	fs.StringVar(&opts.Format, "format", "table", "table|json|jsonl|both")
+	fs.StringVar(&opts.OutPath, "out", "", "output file")
+	fs.BoolVar(&opts.Verbose, "verbose", false, "verbose output")
+	fs.BoolVar(&opts.Quiet, "quiet", false, "quiet output")
+	fs.BoolVar(&opts.NoColor, "no-color", false, "no color")
+	fs.BoolVar(&opts.FailFast, "fail-fast", false, "stop on first fail")
+	fs.IntVar(&opts.TimeoutSec, "timeout", 60, "global timeout sec")
+	fs.StringVar(&opts.RunID, "id", "", "run id")
+	fs.BoolVar(&opts.StrictWarn, "strict-warn", false, "warnings count as failure")
+	fs.StringVar(&opts.ConfigPath, "config", "", "config path")
+	fs.StringVar(&labels, "labels", "", "labels key=value,key2=value2")
+	fs.StringVar(&selectGroups, "select", "", "comma-separated group filter")
+	fs.StringVar(&skipGroups, "skip", "", "comma-separated group skip")
+	return opts
+}
+
+func finalizeCommon(opts *model.RunOptions, fs *flag.FlagSet) {_cover_atomic_.StoreUint32(&goCover_9bd998b4cba1__3[0], 1) ; _cover_atomic_.StoreUint32(&goCover_9bd998b4cba1__3[1], goCover_9bd998b4cba1_P) ; _cover_atomic_.StoreUint32(&goCover_9bd998b4cba1__3[2], 3) ; _cover_atomic_.AddUint32(&goCover_9bd998b4cba1__3[3], 1);
+	opts.Select = splitCSV(fs.Lookup("select").Value.String())
+	opts.Skip = splitCSV(fs.Lookup("skip").Value.String())
+	opts.Labels = parseLabels(fs.Lookup("labels").Value.String())
+}
+
+func cmdRun(ctx context.Context, args []string, stdout, stderr io.Writer, ex execx.Executor) int {_cover_atomic_.StoreUint32(&goCover_9bd998b4cba1__4[0], 9) ; _cover_atomic_.StoreUint32(&goCover_9bd998b4cba1__4[1], goCover_9bd998b4cba1_P) ; _cover_atomic_.StoreUint32(&goCover_9bd998b4cba1__4[2], 4) ; _cover_atomic_.AddUint32(&goCover_9bd998b4cba1__4[3], 1);
+	fs := flag.NewFlagSet("run", flag.ContinueOnError)
+	fs.SetOutput(stderr)
+	opts := parseCommon(fs)
+	if err := fs.Parse(args); err != nil {_cover_atomic_.AddUint32(&goCover_9bd998b4cba1__4[8], 1);
+		return exitcode.ConfigError
+	}
+	_cover_atomic_.AddUint32(&goCover_9bd998b4cba1__4[4], 1);finalizeCommon(opts, fs)
+	cfg, err := config.Load(opts.ConfigPath)
+	if err != nil {_cover_atomic_.AddUint32(&goCover_9bd998b4cba1__4[9], 1);
+		fmt.Fprintln(stderr, "config error:", err)
+		return exitcode.ConfigError
+	}
+	_cover_atomic_.AddUint32(&goCover_9bd998b4cba1__4[5], 1);rctx, cancel := context.WithTimeout(ctx, time.Duration(opts.TimeoutSec)*time.Second)
+	defer cancel()
+	result, err := runner.RunOnce(rctx, ex, cfg, *opts, version, commit)
+	if err != nil {_cover_atomic_.AddUint32(&goCover_9bd998b4cba1__4[10], 1);
+		fmt.Fprintln(stderr, err)
+		return exitcode.RuntimeError
+	}
+	_cover_atomic_.AddUint32(&goCover_9bd998b4cba1__4[6], 1);if err := emitReport(result.Report, *opts, stdout); err != nil {_cover_atomic_.AddUint32(&goCover_9bd998b4cba1__4[11], 1);
+		fmt.Fprintln(stderr, err)
+		return exitcode.OutputError
+	}
+	_cover_atomic_.AddUint32(&goCover_9bd998b4cba1__4[7], 1);return exitcode.FromSummary(result.Report.Summary, opts.StrictWarn)
+}
+
+func cmdSoak(ctx context.Context, args []string, stdout, stderr io.Writer, ex execx.Executor) int {_cover_atomic_.StoreUint32(&goCover_9bd998b4cba1__5[0], 21) ; _cover_atomic_.StoreUint32(&goCover_9bd998b4cba1__5[1], goCover_9bd998b4cba1_P) ; _cover_atomic_.StoreUint32(&goCover_9bd998b4cba1__5[2], 5) ; _cover_atomic_.AddUint32(&goCover_9bd998b4cba1__5[3], 1);
+	fs := flag.NewFlagSet("soak", flag.ContinueOnError)
+	fs.SetOutput(stderr)
+	opts := parseCommon(fs)
+	intervalSec := fs.Int("interval", 5, "interval seconds")
+	durationSec := fs.Int("duration", 0, "duration seconds; 0 means until interrupted")
+	if err := fs.Parse(args); err != nil {_cover_atomic_.AddUint32(&goCover_9bd998b4cba1__5[10], 1);
+		return exitcode.ConfigError
+	}
+	_cover_atomic_.AddUint32(&goCover_9bd998b4cba1__5[4], 1);finalizeCommon(opts, fs)
+	if opts.Format == "table" {_cover_atomic_.AddUint32(&goCover_9bd998b4cba1__5[11], 1);
+		opts.Format = "jsonl"
+	}
+	_cover_atomic_.AddUint32(&goCover_9bd998b4cba1__5[5], 1);cfg, err := config.Load(opts.ConfigPath)
+	if err != nil {_cover_atomic_.AddUint32(&goCover_9bd998b4cba1__5[12], 1);
+		fmt.Fprintln(stderr, "config error:", err)
+		return exitcode.ConfigError
+	}
+	_cover_atomic_.AddUint32(&goCover_9bd998b4cba1__5[6], 1);writer, closeFn, err := outWriter(opts.OutPath, stdout)
+	if err != nil {_cover_atomic_.AddUint32(&goCover_9bd998b4cba1__5[13], 1);
+		fmt.Fprintln(stderr, err)
+		return exitcode.OutputError
+	}
+	_cover_atomic_.AddUint32(&goCover_9bd998b4cba1__5[7], 1);defer closeFn()
+	ew := events.NewWriter(writer)
+	if opts.RunID == "" {_cover_atomic_.AddUint32(&goCover_9bd998b4cba1__5[14], 1);
+		opts.RunID = fmt.Sprintf("soak-%d", time.Now().Unix())
+	}
+	_cover_atomic_.AddUint32(&goCover_9bd998b4cba1__5[8], 1);_ = ew.Emit("run_started", opts.RunID, map[string]any{"command": "soak"})
+	start := time.Now()
+	lastExit := 0
+	for {_cover_atomic_.AddUint32(&goCover_9bd998b4cba1__5[15], 1);
+		if *durationSec > 0 && time.Since(start) > time.Duration(*durationSec)*time.Second {_cover_atomic_.AddUint32(&goCover_9bd998b4cba1__5[20], 1);
+			break
+		}
+		_cover_atomic_.AddUint32(&goCover_9bd998b4cba1__5[16], 1);res, err := runner.RunOnce(ctx, ex, cfg, *opts, version, commit)
+		if err != nil {_cover_atomic_.AddUint32(&goCover_9bd998b4cba1__5[21], 1);
+			_ = ew.Emit("run_finished", opts.RunID, map[string]any{"error": err.Error()})
+			return exitcode.RuntimeError
+		}
+		_cover_atomic_.AddUint32(&goCover_9bd998b4cba1__5[17], 1);for _, c := range res.Report.Checks {_cover_atomic_.AddUint32(&goCover_9bd998b4cba1__5[22], 1);
+			_ = ew.Emit("check_result", opts.RunID, map[string]any{"id": c.ID, "status": c.Status, "target": c.Target})
+		}
+		_cover_atomic_.AddUint32(&goCover_9bd998b4cba1__5[18], 1);_ = ew.Emit("interval_summary", opts.RunID, map[string]any{"summary": res.Report.Summary, "score": res.Report.Score})
+		lastExit = exitcode.FromSummary(res.Report.Summary, opts.StrictWarn)
+		if !opts.Quiet && (opts.Format == "both" || opts.Format == "table") {_cover_atomic_.AddUint32(&goCover_9bd998b4cba1__5[23], 1);
+			_ = output.WriteTable(stdout, res.Report)
+		}
+		_cover_atomic_.AddUint32(&goCover_9bd998b4cba1__5[19], 1);time.Sleep(time.Duration(*intervalSec) * time.Second)
+	}
+	_cover_atomic_.AddUint32(&goCover_9bd998b4cba1__5[9], 1);_ = ew.Emit("run_summary", opts.RunID, map[string]any{"done": true})
+	_ = ew.Emit("run_finished", opts.RunID, map[string]any{"duration_sec": int(time.Since(start).Seconds())})
+	return lastExit
+}
+
+func cmdCompare(args []string, stdout, stderr io.Writer) int {_cover_atomic_.StoreUint32(&goCover_9bd998b4cba1__6[0], 18) ; _cover_atomic_.StoreUint32(&goCover_9bd998b4cba1__6[1], goCover_9bd998b4cba1_P) ; _cover_atomic_.StoreUint32(&goCover_9bd998b4cba1__6[2], 6) ; _cover_atomic_.AddUint32(&goCover_9bd998b4cba1__6[3], 1);
+	fs := flag.NewFlagSet("compare", flag.ContinueOnError)
+	fs.SetOutput(stderr)
+	format := fs.String("format", "table", "table|json")
+	out := fs.String("out", "", "optional output file")
+	if err := fs.Parse(args); err != nil {_cover_atomic_.AddUint32(&goCover_9bd998b4cba1__6[11], 1);
+		return exitcode.ConfigError
+	}
+	_cover_atomic_.AddUint32(&goCover_9bd998b4cba1__6[4], 1);rest := fs.Args()
+	if len(rest) != 2 {_cover_atomic_.AddUint32(&goCover_9bd998b4cba1__6[12], 1);
+		fmt.Fprintln(stderr, "usage: netcheck compare <baseline.json> <candidate.json>")
+		return exitcode.ConfigError
+	}
+	_cover_atomic_.AddUint32(&goCover_9bd998b4cba1__6[5], 1);before, err := compare.Load(rest[0])
+	if err != nil {_cover_atomic_.AddUint32(&goCover_9bd998b4cba1__6[13], 1);
+		fmt.Fprintln(stderr, err)
+		return exitcode.RuntimeError
+	}
+	_cover_atomic_.AddUint32(&goCover_9bd998b4cba1__6[6], 1);after, err := compare.Load(rest[1])
+	if err != nil {_cover_atomic_.AddUint32(&goCover_9bd998b4cba1__6[14], 1);
+		fmt.Fprintln(stderr, err)
+		return exitcode.RuntimeError
+	}
+	_cover_atomic_.AddUint32(&goCover_9bd998b4cba1__6[7], 1);d := compare.Build(before, after)
+	if *format == "json" {_cover_atomic_.AddUint32(&goCover_9bd998b4cba1__6[15], 1);
+		b, _ := json.MarshalIndent(d, "", "  ")
+		if *out == "" {_cover_atomic_.AddUint32(&goCover_9bd998b4cba1__6[17], 1);
+			_, _ = stdout.Write(append(b, '\n'))
+		} else{ _cover_atomic_.AddUint32(&goCover_9bd998b4cba1__6[18], 1);{
+			_ = os.WriteFile(*out, append(b, '\n'), 0o644)
+		}}
+		_cover_atomic_.AddUint32(&goCover_9bd998b4cba1__6[16], 1);return 0
+	}
+	_cover_atomic_.AddUint32(&goCover_9bd998b4cba1__6[8], 1);path := *out
+	if path == "" {_cover_atomic_.AddUint32(&goCover_9bd998b4cba1__6[19], 1);
+		path = filepath.Join(os.TempDir(), "netcheck-compare.txt")
+	}
+	_cover_atomic_.AddUint32(&goCover_9bd998b4cba1__6[9], 1);if err := compare.WriteTable(path, d); err != nil {_cover_atomic_.AddUint32(&goCover_9bd998b4cba1__6[20], 1);
+		fmt.Fprintln(stderr, err)
+		return exitcode.OutputError
+	}
+	_cover_atomic_.AddUint32(&goCover_9bd998b4cba1__6[10], 1);b, _ := os.ReadFile(path)
+	_, _ = stdout.Write(b)
+	return 0
+}
+
+func cmdMan(args []string, stdout, stderr io.Writer) int {_cover_atomic_.StoreUint32(&goCover_9bd998b4cba1__7[0], 10) ; _cover_atomic_.StoreUint32(&goCover_9bd998b4cba1__7[1], goCover_9bd998b4cba1_P) ; _cover_atomic_.StoreUint32(&goCover_9bd998b4cba1__7[2], 7) ; _cover_atomic_.AddUint32(&goCover_9bd998b4cba1__7[3], 1);
+	fs := flag.NewFlagSet("man", flag.ContinueOnError)
+	fs.SetOutput(stderr)
+	export := fs.String("export", "", "export manuals to directory")
+	if err := fs.Parse(args); err != nil {_cover_atomic_.AddUint32(&goCover_9bd998b4cba1__7[8], 1);
+		return exitcode.ConfigError
+	}
+	_cover_atomic_.AddUint32(&goCover_9bd998b4cba1__7[4], 1);if *export != "" {_cover_atomic_.AddUint32(&goCover_9bd998b4cba1__7[9], 1);
+		if err := docs.Export(*export); err != nil {_cover_atomic_.AddUint32(&goCover_9bd998b4cba1__7[10], 1);
+			fmt.Fprintln(stderr, err)
+			return exitcode.RuntimeError
+		}
+	}
+	_cover_atomic_.AddUint32(&goCover_9bd998b4cba1__7[5], 1);topic := ""
+	if len(fs.Args()) > 0 {_cover_atomic_.AddUint32(&goCover_9bd998b4cba1__7[11], 1);
+		topic = fs.Args()[0]
+	}
+	_cover_atomic_.AddUint32(&goCover_9bd998b4cba1__7[6], 1);text, err := docs.Get(topic)
+	if err != nil {_cover_atomic_.AddUint32(&goCover_9bd998b4cba1__7[12], 1);
+		fmt.Fprintln(stderr, err)
+		fmt.Fprintln(stderr, "available topics:", strings.Join(docs.Topics(), ", "))
+		return exitcode.ConfigError
+	}
+	_cover_atomic_.AddUint32(&goCover_9bd998b4cba1__7[7], 1);_, _ = fmt.Fprintln(stdout, text)
+	return 0
+}
+
+func emitReport(report model.Report, opts model.RunOptions, stdout io.Writer) error {_cover_atomic_.StoreUint32(&goCover_9bd998b4cba1__8[0], 12) ; _cover_atomic_.StoreUint32(&goCover_9bd998b4cba1__8[1], goCover_9bd998b4cba1_P) ; _cover_atomic_.StoreUint32(&goCover_9bd998b4cba1__8[2], 8) ; _cover_atomic_.AddUint32(&goCover_9bd998b4cba1__8[3], 1);
+	w, closeFn, err := outWriter(opts.OutPath, stdout)
+	if err != nil {_cover_atomic_.AddUint32(&goCover_9bd998b4cba1__8[5], 1);
+		return err
+	}
+	_cover_atomic_.AddUint32(&goCover_9bd998b4cba1__8[4], 1);defer closeFn()
+	switch opts.Format {
+	case "json":_cover_atomic_.AddUint32(&goCover_9bd998b4cba1__8[6], 1);
+		return output.WriteJSON(w, report)
+	case "jsonl":_cover_atomic_.AddUint32(&goCover_9bd998b4cba1__8[7], 1);
+		b, err := json.Marshal(report)
+		if err != nil {_cover_atomic_.AddUint32(&goCover_9bd998b4cba1__8[13], 1);
+			return err
+		}
+		_cover_atomic_.AddUint32(&goCover_9bd998b4cba1__8[8], 1);_, err = fmt.Fprintln(w, string(b))
+		return err
+	case "table":_cover_atomic_.AddUint32(&goCover_9bd998b4cba1__8[9], 1);
+		return output.WriteTable(w, report)
+	case "both":_cover_atomic_.AddUint32(&goCover_9bd998b4cba1__8[10], 1);
+		if err := output.WriteTable(w, report); err != nil {_cover_atomic_.AddUint32(&goCover_9bd998b4cba1__8[14], 1);
+			return err
+		}
+		_cover_atomic_.AddUint32(&goCover_9bd998b4cba1__8[11], 1);_, _ = fmt.Fprintln(w)
+		return output.WriteJSON(w, report)
+	default:_cover_atomic_.AddUint32(&goCover_9bd998b4cba1__8[12], 1);
+		return errors.New("invalid format")
+	}
+}
+
+func outWriter(path string, fallback io.Writer) (io.Writer, func(), error) {_cover_atomic_.StoreUint32(&goCover_9bd998b4cba1__9[0], 7) ; _cover_atomic_.StoreUint32(&goCover_9bd998b4cba1__9[1], goCover_9bd998b4cba1_P) ; _cover_atomic_.StoreUint32(&goCover_9bd998b4cba1__9[2], 9) ; _cover_atomic_.AddUint32(&goCover_9bd998b4cba1__9[3], 1);
+	if path == "" {_cover_atomic_.AddUint32(&goCover_9bd998b4cba1__9[6], 1);
+		return fallback, func() {_cover_atomic_.AddUint32(&goCover_9bd998b4cba1__9[7], 1);}, nil
+	}
+	_cover_atomic_.AddUint32(&goCover_9bd998b4cba1__9[4], 1);f, err := os.Create(path)
+	if err != nil {_cover_atomic_.AddUint32(&goCover_9bd998b4cba1__9[8], 1);
+		return nil, nil, err
+	}
+	_cover_atomic_.AddUint32(&goCover_9bd998b4cba1__9[5], 1);return f, func() {_cover_atomic_.AddUint32(&goCover_9bd998b4cba1__9[9], 1); _ = f.Close() }, nil
+}
+
+func splitCSV(raw string) []string {_cover_atomic_.StoreUint32(&goCover_9bd998b4cba1__10[0], 6) ; _cover_atomic_.StoreUint32(&goCover_9bd998b4cba1__10[1], goCover_9bd998b4cba1_P) ; _cover_atomic_.StoreUint32(&goCover_9bd998b4cba1__10[2], 10) ; _cover_atomic_.AddUint32(&goCover_9bd998b4cba1__10[3], 1);
+	if strings.TrimSpace(raw) == "" {_cover_atomic_.AddUint32(&goCover_9bd998b4cba1__10[6], 1);
+		return nil
+	}
+	_cover_atomic_.AddUint32(&goCover_9bd998b4cba1__10[4], 1);parts := strings.Split(raw, ",")
+	out := make([]string, 0, len(parts))
+	for _, p := range parts {_cover_atomic_.AddUint32(&goCover_9bd998b4cba1__10[7], 1);
+		p = strings.TrimSpace(p)
+		if p != "" {_cover_atomic_.AddUint32(&goCover_9bd998b4cba1__10[8], 1);
+			out = append(out, p)
+		}
+	}
+	_cover_atomic_.AddUint32(&goCover_9bd998b4cba1__10[5], 1);return out
+}
+
+func parseLabels(raw string) map[string]string {_cover_atomic_.StoreUint32(&goCover_9bd998b4cba1__11[0], 7) ; _cover_atomic_.StoreUint32(&goCover_9bd998b4cba1__11[1], goCover_9bd998b4cba1_P) ; _cover_atomic_.StoreUint32(&goCover_9bd998b4cba1__11[2], 11) ; _cover_atomic_.AddUint32(&goCover_9bd998b4cba1__11[3], 1);
+	out := map[string]string{}
+	for _, pair := range splitCSV(raw) {_cover_atomic_.AddUint32(&goCover_9bd998b4cba1__11[6], 1);
+		kv := strings.SplitN(pair, "=", 2)
+		if len(kv) != 2 {_cover_atomic_.AddUint32(&goCover_9bd998b4cba1__11[8], 1);
+			continue
+		}
+		_cover_atomic_.AddUint32(&goCover_9bd998b4cba1__11[7], 1);out[strings.TrimSpace(kv[0])] = strings.TrimSpace(kv[1])
+	}
+	_cover_atomic_.AddUint32(&goCover_9bd998b4cba1__11[4], 1);if len(out) == 0 {_cover_atomic_.AddUint32(&goCover_9bd998b4cba1__11[9], 1);
+		return nil
+	}
+	_cover_atomic_.AddUint32(&goCover_9bd998b4cba1__11[5], 1);return out
+}
+
+var _ = _cover_atomic_.LoadUint32

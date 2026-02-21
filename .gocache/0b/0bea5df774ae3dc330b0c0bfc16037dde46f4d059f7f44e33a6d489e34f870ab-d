@@ -1,0 +1,45 @@
+//line /Users/zambamon/Personal/scripts/network/internal/checks/path.go:1:1
+package checks; import _cover_atomic_ "sync/atomic"
+
+import (
+	"context"
+	"netcheck/internal/config"
+	"netcheck/internal/execx"
+	"netcheck/internal/model"
+	"strings"
+	"time"
+)
+
+type PathCheck struct{ Target string }
+
+func (c PathCheck) ID() string    {_cover_atomic_.StoreUint32(&goCover_ce70894fcd8a__27[0], 1) ; _cover_atomic_.StoreUint32(&goCover_ce70894fcd8a__27[1], goCover_ce70894fcd8a_P) ; _cover_atomic_.StoreUint32(&goCover_ce70894fcd8a__27[2], 27) ; _cover_atomic_.AddUint32(&goCover_ce70894fcd8a__27[3], 1); return "path." + c.Target }
+func (c PathCheck) Group() string {_cover_atomic_.StoreUint32(&goCover_ce70894fcd8a__28[0], 1) ; _cover_atomic_.StoreUint32(&goCover_ce70894fcd8a__28[1], goCover_ce70894fcd8a_P) ; _cover_atomic_.StoreUint32(&goCover_ce70894fcd8a__28[2], 28) ; _cover_atomic_.AddUint32(&goCover_ce70894fcd8a__28[3], 1); return "path" }
+
+func (c PathCheck) Run(ctx context.Context, ex execx.Executor, cfg config.Config, timeoutSec int) model.CheckResult {_cover_atomic_.StoreUint32(&goCover_ce70894fcd8a__29[0], 13) ; _cover_atomic_.StoreUint32(&goCover_ce70894fcd8a__29[1], goCover_ce70894fcd8a_P) ; _cover_atomic_.StoreUint32(&goCover_ce70894fcd8a__29[2], 29) ; _cover_atomic_.AddUint32(&goCover_ce70894fcd8a__29[3], 1);
+	start := time.Now()
+	if _, err := ex.LookPath("mtr"); err != nil {_cover_atomic_.AddUint32(&goCover_ce70894fcd8a__29[7], 1);
+		if _, terr := ex.LookPath("traceroute"); terr != nil {_cover_atomic_.AddUint32(&goCover_ce70894fcd8a__29[11], 1);
+			return model.CheckResult{ID: c.ID(), Group: c.Group(), Target: c.Target, Status: model.StatusSkip, Error: "mtr and traceroute not found"}
+		}
+		_cover_atomic_.AddUint32(&goCover_ce70894fcd8a__29[8], 1);res := runWithTimeout(ctx, timeoutSec, ex, "traceroute", "-m", "15", c.Target)
+		if res.Err != nil && res.Stdout == "" {_cover_atomic_.AddUint32(&goCover_ce70894fcd8a__29[12], 1);
+			return model.CheckResult{ID: c.ID(), Group: c.Group(), Target: c.Target, Status: model.StatusFail, Error: res.Err.Error(), DurationMS: time.Since(start).Milliseconds()}
+		}
+		_cover_atomic_.AddUint32(&goCover_ce70894fcd8a__29[9], 1);status := model.StatusPass
+		if strings.Count(res.Stdout, "*") > 10 {_cover_atomic_.AddUint32(&goCover_ce70894fcd8a__29[13], 1);
+			status = model.StatusWarn
+		}
+		_cover_atomic_.AddUint32(&goCover_ce70894fcd8a__29[10], 1);return model.CheckResult{ID: c.ID(), Group: c.Group(), Target: c.Target, Status: status, Raw: res.Stdout, Error: stderrMsg(res.Stderr), DurationMS: time.Since(start).Milliseconds()}
+	}
+	_cover_atomic_.AddUint32(&goCover_ce70894fcd8a__29[4], 1);res := runWithTimeout(ctx, timeoutSec, ex, "mtr", "-rwzc", "10", c.Target)
+	if res.Err != nil && res.Stdout == "" {_cover_atomic_.AddUint32(&goCover_ce70894fcd8a__29[14], 1);
+		return model.CheckResult{ID: c.ID(), Group: c.Group(), Target: c.Target, Status: model.StatusFail, Error: res.Err.Error(), DurationMS: time.Since(start).Milliseconds()}
+	}
+	_cover_atomic_.AddUint32(&goCover_ce70894fcd8a__29[5], 1);status := model.StatusPass
+	if strings.Contains(res.Stdout, "100.0%") {_cover_atomic_.AddUint32(&goCover_ce70894fcd8a__29[15], 1);
+		status = model.StatusFail
+	}
+	_cover_atomic_.AddUint32(&goCover_ce70894fcd8a__29[6], 1);return model.CheckResult{ID: c.ID(), Group: c.Group(), Target: c.Target, Status: status, Raw: res.Stdout, Error: stderrMsg(res.Stderr), DurationMS: time.Since(start).Milliseconds()}
+}
+
+var _ = _cover_atomic_.LoadUint32

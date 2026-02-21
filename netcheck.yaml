@@ -1,0 +1,45 @@
+# netcheck config (macOS v1)
+# Update bandwidth.iperf.target with your Windows laptop IPv4.
+
+targets:
+  ping: ["1.1.1.1", "8.8.8.8"]
+  dns_domains: ["google.com"]
+  resolvers: ["1.1.1.1", "8.8.8.8"]
+  http_urls: ["https://example.com"]
+
+bandwidth:
+  speedtest:
+    enabled: true
+    server_id: ""
+  iperf:
+    enabled: true
+    target: "192.168.40.29:5201" # <-- change to your Windows machine IPv4:port
+    parallel_streams: 4
+    duration_sec: 30
+
+expected_plan:
+  download_mbps: 30
+  upload_mbps: 20
+
+thresholds:
+  loss_pass_max: 0.5
+  loss_warn_max: 2
+  rtt_p95_pass_max_ms: 40
+  rtt_p95_warn_max_ms: 80
+  jitter_pass_max_ms: 10
+  jitter_warn_max_ms: 25
+  dns_pass_max_ms: 50
+  dns_warn_max_ms: 120
+  http_pass_max_ms: 800
+  http_warn_max_ms: 2000
+  loaded_latency_pass_delta_ms: 30
+  loaded_latency_warn_delta_ms: 80
+  throughput_pass_pct: 80
+  throughput_warn_pct: 60
+
+soak:
+  interval_sec: 5
+  duration_sec: 0
+  emit_final_summary: true
+
+per_check_timeout_sec: 20

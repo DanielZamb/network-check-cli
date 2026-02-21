@@ -1,0 +1,3 @@
+covervars.go
+runner.cover.go
+./runner_test.go

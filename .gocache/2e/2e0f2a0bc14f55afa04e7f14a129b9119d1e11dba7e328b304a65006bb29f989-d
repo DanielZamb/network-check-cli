@@ -1,0 +1,63 @@
+//line /Users/zambamon/Personal/scripts/network/internal/checks/local.go:1:1
+package checks
+
+import (
+	"context"
+	"netcheck/internal/config"
+	"netcheck/internal/eval"
+	"netcheck/internal/execx"
+	"netcheck/internal/model"
+	"strings"
+	"time"
+)
+
+type LocalCheck struct{}
+
+func (LocalCheck) ID() string    {goCover_ce70894fcd8a__19[0] = 1 ; goCover_ce70894fcd8a__19[1] = goCover_ce70894fcd8a_P ; goCover_ce70894fcd8a__19[2] = 19 ; goCover_ce70894fcd8a__19[3] = 1; return "local.gateway" }
+func (LocalCheck) Group() string {goCover_ce70894fcd8a__20[0] = 1 ; goCover_ce70894fcd8a__20[1] = goCover_ce70894fcd8a_P ; goCover_ce70894fcd8a__20[2] = 20 ; goCover_ce70894fcd8a__20[3] = 1; return "local" }
+
+func (LocalCheck) Run(ctx context.Context, ex execx.Executor, cfg config.Config, timeoutSec int) model.CheckResult {goCover_ce70894fcd8a__21[0] = 18 ; goCover_ce70894fcd8a__21[1] = goCover_ce70894fcd8a_P ; goCover_ce70894fcd8a__21[2] = 21 ; goCover_ce70894fcd8a__21[3] = 1;
+	start := time.Now()
+	if _, err := ex.LookPath("netstat"); err != nil {goCover_ce70894fcd8a__21[9] = 1;
+		return model.CheckResult{ID: "local.gateway", Group: "local", Status: model.StatusSkip, Error: "netstat not found"}
+	}
+	goCover_ce70894fcd8a__21[4] = 1;res := runWithTimeout(ctx, timeoutSec, ex, "netstat", "-rn")
+	if res.Err != nil {goCover_ce70894fcd8a__21[10] = 1;
+		return model.CheckResult{ID: "local.gateway", Group: "local", Status: model.StatusFail, Error: res.Err.Error(), DurationMS: time.Since(start).Milliseconds()}
+	}
+	goCover_ce70894fcd8a__21[5] = 1;gw := ""
+	for _, line := range strings.Split(res.Stdout, "\n") {goCover_ce70894fcd8a__21[11] = 1;
+		if strings.HasPrefix(strings.TrimSpace(line), "default") {goCover_ce70894fcd8a__21[12] = 1;
+			fields := strings.Fields(line)
+			if len(fields) > 1 {goCover_ce70894fcd8a__21[13] = 1;
+				gw = fields[1]
+				break
+			}
+		}
+	}
+	goCover_ce70894fcd8a__21[6] = 1;if gw == "" {goCover_ce70894fcd8a__21[14] = 1;
+		return model.CheckResult{ID: "local.gateway", Group: "local", Status: model.StatusWarn, Error: "default gateway not detected", DurationMS: time.Since(start).Milliseconds()}
+	}
+	goCover_ce70894fcd8a__21[7] = 1;ping := runWithTimeout(ctx, timeoutSec, ex, "ping", "-c", "10", gw)
+	loss, avg, jitter := parsePing(ping.Stdout)
+	status := eval.LowerIsBetter(loss, cfg.Thresholds.LossPassMax, cfg.Thresholds.LossWarnMax)
+	metrics := map[string]any{"loss_pct": loss, "avg_ms": avg, "jitter_ms": jitter}
+	if _, err := ex.LookPath("ifconfig"); err == nil {goCover_ce70894fcd8a__21[15] = 1;
+		ifcfg := runWithTimeout(ctx, timeoutSec, ex, "ifconfig")
+		lines := strings.Split(ifcfg.Stdout, "\n")
+		active := 0
+		ipCount := 0
+		for _, l := range lines {goCover_ce70894fcd8a__21[17] = 1;
+			t := strings.TrimSpace(l)
+			if strings.HasPrefix(t, "status: active") {goCover_ce70894fcd8a__21[19] = 1;
+				active++
+			}
+			goCover_ce70894fcd8a__21[18] = 1;if strings.HasPrefix(t, "inet ") && !strings.Contains(t, "127.0.0.1") {goCover_ce70894fcd8a__21[20] = 1;
+				ipCount++
+			}
+		}
+		goCover_ce70894fcd8a__21[16] = 1;metrics["active_interfaces"] = active
+		metrics["local_ip_count"] = ipCount
+	}
+	goCover_ce70894fcd8a__21[8] = 1;return model.CheckResult{ID: "local.gateway", Group: "local", Target: gw, Status: status, Metrics: metrics, Raw: ping.Stdout, DurationMS: time.Since(start).Milliseconds()}
+}

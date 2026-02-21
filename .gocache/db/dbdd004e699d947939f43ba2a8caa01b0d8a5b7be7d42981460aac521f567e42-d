@@ -1,0 +1,25 @@
+# test log
+getenv PATH
+stat /opt/homebrew/Cellar/go/1.24.4/libexec/bin/sh
+stat /Users/zambamon/.codex/tmp/arg0/codex-arg02RYGWu/sh
+stat /Users/zambamon/.local/bin/sh
+stat /Users/zambamon/.nvm/versions/node/v22.17.0/bin/sh
+stat /opt/homebrew/bin/sh
+stat /opt/homebrew/sbin/sh
+stat /usr/local/bin/sh
+stat /System/Cryptexes/App/usr/bin/sh
+stat /usr/bin/sh
+stat /bin/sh
+open /dev/null
+open /bin/sh
+getenv PATH
+stat /opt/homebrew/Cellar/go/1.24.4/libexec/bin/sh
+stat /Users/zambamon/.codex/tmp/arg0/codex-arg02RYGWu/sh
+stat /Users/zambamon/.local/bin/sh
+stat /Users/zambamon/.nvm/versions/node/v22.17.0/bin/sh
+stat /opt/homebrew/bin/sh
+stat /opt/homebrew/sbin/sh
+stat /usr/local/bin/sh
+stat /System/Cryptexes/App/usr/bin/sh
+stat /usr/bin/sh
+stat /bin/sh

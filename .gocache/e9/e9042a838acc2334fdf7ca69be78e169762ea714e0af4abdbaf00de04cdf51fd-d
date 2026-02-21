@@ -1,0 +1,48 @@
+//line /Users/zambamon/Personal/scripts/network/internal/checks/dns.go:1:1
+package checks
+
+import (
+	"context"
+	"fmt"
+	"netcheck/internal/config"
+	"netcheck/internal/eval"
+	"netcheck/internal/execx"
+	"netcheck/internal/model"
+	"time"
+)
+
+type DNSCheck struct {
+	Domain   string
+	Resolver string
+}
+
+func (c DNSCheck) ID() string {goCover_ce70894fcd8a__13[0] = 3 ; goCover_ce70894fcd8a__13[1] = goCover_ce70894fcd8a_P ; goCover_ce70894fcd8a__13[2] = 13 ; goCover_ce70894fcd8a__13[3] = 1;
+	if c.Resolver == "" {goCover_ce70894fcd8a__13[5] = 1;
+		return "dns." + c.Domain
+	}
+	goCover_ce70894fcd8a__13[4] = 1;return "dns." + c.Domain + "@" + c.Resolver
+}
+func (c DNSCheck) Group() string {goCover_ce70894fcd8a__14[0] = 1 ; goCover_ce70894fcd8a__14[1] = goCover_ce70894fcd8a_P ; goCover_ce70894fcd8a__14[2] = 14 ; goCover_ce70894fcd8a__14[3] = 1; return "dns" }
+
+func (c DNSCheck) Run(ctx context.Context, ex execx.Executor, cfg config.Config, timeoutSec int) model.CheckResult {goCover_ce70894fcd8a__15[0] = 9 ; goCover_ce70894fcd8a__15[1] = goCover_ce70894fcd8a_P ; goCover_ce70894fcd8a__15[2] = 15 ; goCover_ce70894fcd8a__15[3] = 1;
+	start := time.Now()
+	if _, err := ex.LookPath("dig"); err != nil {goCover_ce70894fcd8a__15[8] = 1;
+		return model.CheckResult{ID: c.ID(), Group: c.Group(), Target: c.Domain, Status: model.StatusSkip, Error: "dig not found"}
+	}
+	goCover_ce70894fcd8a__15[4] = 1;args := []string{c.Domain}
+	target := c.Domain
+	if c.Resolver != "" {goCover_ce70894fcd8a__15[9] = 1;
+		args = []string{"@" + c.Resolver, c.Domain}
+		target = c.Domain + " via " + c.Resolver
+	}
+	goCover_ce70894fcd8a__15[5] = 1;res := runWithTimeout(ctx, timeoutSec, ex, "dig", args...)
+	if res.Err != nil && res.Stdout == "" {goCover_ce70894fcd8a__15[10] = 1;
+		return model.CheckResult{ID: c.ID(), Group: c.Group(), Target: target, Status: model.StatusFail, Error: res.Err.Error(), DurationMS: time.Since(start).Milliseconds()}
+	}
+	goCover_ce70894fcd8a__15[6] = 1;ms := parseDigMS(res.Stdout)
+	status := eval.LowerIsBetter(ms, cfg.Thresholds.DNSPassMaxMs, cfg.Thresholds.DNSWarnMaxMs)
+	if ms == 0 {goCover_ce70894fcd8a__15[11] = 1;
+		status = model.StatusWarn
+	}
+	goCover_ce70894fcd8a__15[7] = 1;return model.CheckResult{ID: c.ID(), Group: c.Group(), Target: target, Status: status, Metrics: map[string]any{"query_ms": ms}, Raw: res.Stdout, Error: fmt.Sprintf("%s", stderrMsg(res.Stderr)), DurationMS: time.Since(start).Milliseconds()}
+}

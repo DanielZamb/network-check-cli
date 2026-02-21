@@ -1,0 +1,20 @@
+# netcheck config
+
+Default config file is YAML/JSON using fields in `internal/config.Config`.
+
+Key fields:
+- `targets.ping`
+- `targets.dns_domains`
+- `targets.resolvers`
+- `targets.http_urls`
+- `bandwidth.speedtest.enabled`
+- `bandwidth.speedtest.server_id`
+- `bandwidth.iperf.enabled`
+- `bandwidth.iperf.target`
+- `expected_plan.download_mbps`
+- `expected_plan.upload_mbps`
+- `thresholds.*`
+- `soak.interval_sec`
+- `soak.duration_sec`
+- `soak.emit_final_summary`
+- `per_check_timeout_sec`
