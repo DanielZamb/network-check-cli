@@ -1,5 +1,5 @@
 # netcheck config (macOS v1)
-# Update bandwidth.iperf.target with your Windows laptop IPv4.
+# Update bandwidth.iperf.target with your iperf3 server IPv4.
 
 targets:
   ping: ["1.1.1.1", "8.8.8.8"]
@@ -13,7 +13,7 @@ bandwidth:
     server_id: ""
   iperf:
     enabled: true
-    target: "192.168.40.29:5201" # <-- change to your Windows machine IPv4:port
+    target: "192.0.2.10:5201" # example only (RFC 5737 TEST-NET-1)
     parallel_streams: 4
     duration_sec: 30
 
